@@ -17,7 +17,9 @@ public class GameFrame extends JFrame implements KeyListener {
 
     @Override
     public void keyPressed(final KeyEvent e) {
-        emulation.jump();
+        emulation.getPopulation().getDinosaurs().forEach(dino -> {
+            emulation.jump(dino);
+        });
     }
 
     @Override

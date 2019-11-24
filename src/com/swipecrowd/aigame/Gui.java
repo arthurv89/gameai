@@ -35,8 +35,9 @@ public class Gui {
         frame.setFocusable(true);
     }
 
-    public void redraw(final int time) {
+    public void redraw(final int time, final int aliveDinos) {
         panel.setTime(time);
+        panel.setAliveDinos(aliveDinos);
         panel.repaint();
     }
 

@@ -13,23 +13,21 @@ import static com.swipecrowd.aigame.GamePanel.OBSTACLE_WIDTH;
 import static com.swipecrowd.aigame.GamePanel.OBSTACLE_Y_POS;
 
 public class Emulation {
-    private static final int POP_SIZE = 1;
-    private static final int FPS = 100000;
+    private static final int POP_SIZE = 500;
+    private static final int FPS = 100;
     private static final double timeInBetween = 1000 / FPS;
-    private static final double SPAWN_PROBABILITY = 0.01;
+    private static final double SPAWN_PROBABILITY = 0.02;
     private static final double GRAVITY = 1;
     private static final double X_SPEED = 10;
     private static final double FORCE_UP = GRAVITY * 20;
 
-    private double forceUp;
-    private boolean jumping;
     private long lastDrawTime;
 
     @Getter
-    private CopyOnWriteArrayList<Obstacle> obstacles;
+    private CopyOnWriteArrayList<Obstacle> obstacles = new CopyOnWriteArrayList<>();
 
     @Getter
-    private Population population;
+    private Population population = new Population(POP_SIZE);
 
     @Getter
     private int emulationNo = 0;
@@ -51,30 +49,31 @@ public class Emulation {
     }
 
     private void resetEmulation() {
-        obstacles = new CopyOnWriteArrayList<>();
-        population = new Population(POP_SIZE);
+        obstacles.clear();
+        population.clear();
         lastDrawTime = 0;
-        jumping = false;
-        forceUp = 0;
         time = 0;
     }
 
     private void runGeneration(final Gui gui) {
-        boolean hasAliveDinos = true;
-        while(hasAliveDinos) {
+        int aliveDinos = population.getDinosaurs().size();
+        while(aliveDinos > 0) {
             waitTillNextFrame();
 
-            final Action action = calculateAction();
-            updateState(action, gui.getPanel().getWidth());
+            updateState(gui.getPanel().getWidth());
 
-            gui.redraw(time);
+            aliveDinos = countAliveDinos();
 
-            hasAliveDinos = hasAliveDinos();
+            gui.redraw(time, aliveDinos);
         }
     }
 
-    private Action calculateAction() {
-        return new JumpAction();
+    private Action calculateAction(final Dinosaur dino) {
+        if(Math.random() < 0.5) {
+            return new JumpAction();
+        } else {
+            return new NullAction();
+        }
     }
 
     private void waitTillNextFrame() {
@@ -94,12 +93,10 @@ public class Emulation {
         }
     }
 
-    private void updateState(final Action action, final int xPos) {
+    private void updateState(final int xPos) {
         if(shouldAddObstacle()) {
             obstacles.add(new Obstacle(xPos, OBSTACLE_Y_POS, OBSTACLE_WIDTH, OBSTACLE_HEIGHT));
         }
-
-        applyAction(action);
 
         updateDinosaurs();
         updateObstacles();
@@ -108,14 +105,14 @@ public class Emulation {
         time++;
     }
 
-    private void applyAction(final Action action) {
+    private void applyAction(final Action action, final Dinosaur dino) {
         if(action instanceof JumpAction) {
-            jump();
+            jump(dino);
         }
     }
 
-    private boolean hasAliveDinos() {
-        return population.getDinosaurs().stream().anyMatch(x -> !x.isDead());
+    private int countAliveDinos() {
+        return (int) population.getDinosaurs().stream().filter(x -> !x.isDead()).count();
     }
 
     private void markDeadDinos() {
@@ -156,25 +153,28 @@ public class Emulation {
 
     private void updateDinosaurs() {
         population.getDinosaurs().forEach(dino -> {
+            final Action action = calculateAction(dino);
+            applyAction(action, dino);
+
 //            System.out.printf("Force up %s, Y = %s %n", forceUp, dino.getYPos());
-            dino.goUp(this.forceUp);
+            dino.goUp(dino.getForceUp());
 
             if(dino.getYPos() < 0) {
                 dino.setYPos(0);
-                this.forceUp = 0;
+                dino.setForceUp(0);
             }
             if(dino.getYPos() == 0) {
-                jumping = false;
+                dino.setJumping(false);
             } else {
-                this.forceUp -= GRAVITY;
+                dino.setForceUp(dino.getForceUp() - GRAVITY);
             }
         });
     }
 
-    public void jump() {
-        if(!jumping) {
-            jumping = true;
-            forceUp = FORCE_UP;
+    public void jump(final Dinosaur dino) {
+        if(!dino.isJumping()) {
+            dino.setJumping(true);
+            dino.setForceUp(FORCE_UP);
         }
     }
 }

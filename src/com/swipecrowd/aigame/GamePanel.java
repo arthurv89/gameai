@@ -15,24 +15,31 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GamePanel extends JPanel {
     public static final int DINOSAUR_X_POS = 0;
-    public static final int DINOSAUR_WIDTH = 20;
+    public static final int DINOSAUR_WIDTH = 50;
     public static final int DINOSAUR_HEIGHT = 50;
     public static final double OBSTACLE_Y_POS = 0;
-    public static final double OBSTACLE_WIDTH = 20;
-    public static final double OBSTACLE_HEIGHT = 20;
+    public static final double OBSTACLE_WIDTH = 30;
+    public static final double OBSTACLE_HEIGHT = 60;
 
     private final Emulation emulation;
     private static final Map<?, ?> renderingHints = createRenderingHints();
     @Setter
     private int time;
+    private int aliveDinos;
 
 
     private void drawScreen(final Graphics2D g) {
         drawBackground(g);
         drawTime(g);
         drawIteration(g, emulation.getEmulationNo());
+        drawDinoCount(g, aliveDinos);
         drawDinosaurs(g, emulation.getPopulation());
         drawObstacles(g);
+    }
+
+    private void drawDinoCount(final Graphics2D g, final int aliveDinos) {
+        g.setColor(Color.BLACK);
+        g.drawString(String.valueOf(aliveDinos), 0, 60);
     }
 
     private void drawIteration(final Graphics2D g, final int emulationNo) {
@@ -76,7 +83,7 @@ public class GamePanel extends JPanel {
 
     private void drawDinosaur(final Graphics g, final double yPos) {
         g.setColor(Color.BLACK);
-        g.fillRect(DINOSAUR_X_POS,
+        g.drawRect(DINOSAUR_X_POS,
                 bottomY(yPos),
                 DINOSAUR_WIDTH,
                 DINOSAUR_HEIGHT);
@@ -109,5 +116,9 @@ public class GamePanel extends JPanel {
         hintsMap.put(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
         hintsMap.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         return new RenderingHints(hintsMap);
+    }
+
+    public void setAliveDinos(final int aliveDinos) {
+        this.aliveDinos = aliveDinos;
     }
 }
