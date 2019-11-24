@@ -3,8 +3,7 @@ package com.swipecrowd.aigame;
 import lombok.Getter;
 
 import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.swipecrowd.aigame.GamePanel.DINOSAUR_HEIGHT;
 import static com.swipecrowd.aigame.GamePanel.DINOSAUR_WIDTH;
@@ -15,7 +14,7 @@ import static com.swipecrowd.aigame.GamePanel.OBSTACLE_Y_POS;
 
 public class Emulation {
     private static final int POP_SIZE = 1;
-    private static final int FPS = 100;
+    private static final int FPS = 100000;
     private static final double timeInBetween = 1000 / FPS;
     private static final double SPAWN_PROBABILITY = 0.01;
     private static final double GRAVITY = 1;
@@ -27,13 +26,14 @@ public class Emulation {
     private long lastDrawTime;
 
     @Getter
-    private List<Obstacle> obstacles;
+    private CopyOnWriteArrayList<Obstacle> obstacles;
 
     @Getter
     private Population population;
 
     @Getter
     private int emulationNo = 0;
+    private int time;
 
     public void start() {
         final Gui gui = new Gui();
@@ -51,11 +51,12 @@ public class Emulation {
     }
 
     private void resetEmulation() {
-        this.obstacles = new ArrayList<>();
+        obstacles = new CopyOnWriteArrayList<>();
         population = new Population(POP_SIZE);
         lastDrawTime = 0;
         jumping = false;
         forceUp = 0;
+        time = 0;
     }
 
     private void runGeneration(final Gui gui) {
@@ -63,12 +64,17 @@ public class Emulation {
         while(hasAliveDinos) {
             waitTillNextFrame();
 
-            updateState(gui.getPanel().getWidth());
+            final Action action = calculateAction();
+            updateState(action, gui.getPanel().getWidth());
 
-            gui.redraw();
+            gui.redraw(time);
 
             hasAliveDinos = hasAliveDinos();
         }
+    }
+
+    private Action calculateAction() {
+        return new JumpAction();
     }
 
     private void waitTillNextFrame() {
@@ -88,15 +94,24 @@ public class Emulation {
         }
     }
 
-    private void updateState(final int xPos) {
+    private void updateState(final Action action, final int xPos) {
         if(shouldAddObstacle()) {
             obstacles.add(new Obstacle(xPos, OBSTACLE_Y_POS, OBSTACLE_WIDTH, OBSTACLE_HEIGHT));
         }
+
+        applyAction(action);
 
         updateDinosaurs();
         updateObstacles();
 
         markDeadDinos();
+        time++;
+    }
+
+    private void applyAction(final Action action) {
+        if(action instanceof JumpAction) {
+            jump();
+        }
     }
 
     private boolean hasAliveDinos() {

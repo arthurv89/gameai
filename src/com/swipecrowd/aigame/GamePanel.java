@@ -1,6 +1,7 @@
 package com.swipecrowd.aigame;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import javax.swing.JPanel;
 import java.awt.Color;
@@ -13,7 +14,6 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 public class GamePanel extends JPanel {
-    private int time = 0;
     public static final int DINOSAUR_X_POS = 0;
     public static final int DINOSAUR_WIDTH = 20;
     public static final int DINOSAUR_HEIGHT = 50;
@@ -23,6 +23,8 @@ public class GamePanel extends JPanel {
 
     private final Emulation emulation;
     private static final Map<?, ?> renderingHints = createRenderingHints();
+    @Setter
+    private int time;
 
 
     private void drawScreen(final Graphics2D g) {
@@ -40,7 +42,7 @@ public class GamePanel extends JPanel {
     }
 
     private void drawObstacles(final Graphics g) {
-        emulation.getObstacles().forEach(obstacle -> {
+        emulation.getObstacles().listIterator().forEachRemaining(obstacle -> {
             drawObstacle(g, obstacle);
         });
     }
@@ -55,7 +57,7 @@ public class GamePanel extends JPanel {
     }
 
     private void drawDinosaurs(final Graphics g, final Population pop) {
-        pop.getDinosaurs().forEach(x -> {
+        pop.getDinosaurs().iterator().forEachRemaining(x -> {
             if(!x.isDead()) {
                 drawDinosaur(g, x.getYPos());
             }
@@ -99,8 +101,6 @@ public class GamePanel extends JPanel {
 
         g.drawImage(image, 0, 0, null);
         gr.dispose();
-
-        time++;
     }
 
     private static Map<?, ?> createRenderingHints() {
@@ -110,5 +110,4 @@ public class GamePanel extends JPanel {
         hintsMap.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         return new RenderingHints(hintsMap);
     }
-
 }

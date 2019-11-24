@@ -35,7 +35,8 @@ public class Gui {
         frame.setFocusable(true);
     }
 
-    public void redraw() {
+    public void redraw(final int time) {
+        panel.setTime(time);
         panel.repaint();
     }
 
