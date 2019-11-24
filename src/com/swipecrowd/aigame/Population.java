@@ -15,16 +15,4 @@ public class Population {
         IntStream.rangeClosed(1, size)
                 .forEach(x -> dinosaurs.add(new Dinosaur()));
     }
-
-    public boolean done() {
-        return false;
-    }
-
-    public void updateAlive() {
-
-    }
-
-    public void naturalSelection() {
-
-    }
 }

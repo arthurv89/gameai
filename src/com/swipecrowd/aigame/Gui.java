@@ -6,22 +6,25 @@ import javax.swing.JFrame;
 
 public class Gui {
     @Getter
-    private JFrame frame;
+    private GameFrame frame;
 
     @Getter
-    private DinoPanel panel;
+    private GamePanel panel;
 
-    private int WIDTH = 500;
-    private int HEIGHT = 500;
+    private static final int WIDTH = 500;
+    private static final int HEIGHT = 500;
+    private Emulation emulation;
 
     public void setup(Emulation emulation) {
-        createElements(emulation);
+        this.emulation = emulation;
+
+        createElements();
         setupProperties();
     }
 
-    private void createElements(final Emulation emulation) {
-        frame = new JFrame();
-        panel = new DinoPanel(emulation);
+    private void createElements() {
+        frame = new GameFrame(emulation);
+        panel = new GamePanel(emulation);
     }
 
     private void setupProperties() {
@@ -29,15 +32,11 @@ public class Gui {
         frame.setSize(WIDTH, HEIGHT);
         frame.getContentPane().add(panel);
         frame.setVisible(true);
-
-        panel.setFocusable(true);
+        frame.setFocusable(true);
     }
 
     public void redraw() {
         panel.repaint();
     }
 
-    public void removeObstacles() {
-
-    }
 }

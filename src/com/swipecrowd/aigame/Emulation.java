@@ -2,8 +2,16 @@ package com.swipecrowd.aigame;
 
 import lombok.Getter;
 
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.swipecrowd.aigame.GamePanel.DINOSAUR_HEIGHT;
+import static com.swipecrowd.aigame.GamePanel.DINOSAUR_WIDTH;
+import static com.swipecrowd.aigame.GamePanel.DINOSAUR_X_POS;
+import static com.swipecrowd.aigame.GamePanel.OBSTACLE_HEIGHT;
+import static com.swipecrowd.aigame.GamePanel.OBSTACLE_WIDTH;
+import static com.swipecrowd.aigame.GamePanel.OBSTACLE_Y_POS;
 
 public class Emulation {
     private static final int POP_SIZE = 1;
@@ -15,14 +23,17 @@ public class Emulation {
     private static final double FORCE_UP = GRAVITY * 20;
 
     private double forceUp;
-    private boolean jumping = false;
-    private long lastDrawTime = 0;
+    private boolean jumping;
+    private long lastDrawTime;
 
     @Getter
-    private List<Obstacle> obstacles = new ArrayList<>();
+    private List<Obstacle> obstacles;
 
     @Getter
-    private Population population = new Population(POP_SIZE);;
+    private Population population;
+
+    @Getter
+    private int emulationNo = 0;
 
     public void start() {
         final Gui gui = new Gui();
@@ -33,21 +44,30 @@ public class Emulation {
 
     private void run(final Gui gui) {
         while (true) {
+            resetEmulation();
             runGeneration(gui);
-
-            population.naturalSelection();
-            gui.removeObstacles();
+            emulationNo++;
         }
     }
 
+    private void resetEmulation() {
+        this.obstacles = new ArrayList<>();
+        population = new Population(POP_SIZE);
+        lastDrawTime = 0;
+        jumping = false;
+        forceUp = 0;
+    }
+
     private void runGeneration(final Gui gui) {
-        while(!population.done()) {
+        boolean hasAliveDinos = true;
+        while(hasAliveDinos) {
             waitTillNextFrame();
 
             updateState(gui.getPanel().getWidth());
 
             gui.redraw();
-            population.updateAlive();
+
+            hasAliveDinos = hasAliveDinos();
         }
     }
 
@@ -68,14 +88,45 @@ public class Emulation {
         }
     }
 
-    private void updateState(final int width) {
+    private void updateState(final int xPos) {
         if(shouldAddObstacle()) {
-            final double height = 0;
-            obstacles.add(new Obstacle(width, height));
+            obstacles.add(new Obstacle(xPos, OBSTACLE_Y_POS, OBSTACLE_WIDTH, OBSTACLE_HEIGHT));
         }
 
         updateDinosaurs();
         updateObstacles();
+
+        markDeadDinos();
+    }
+
+    private boolean hasAliveDinos() {
+        return population.getDinosaurs().stream().anyMatch(x -> !x.isDead());
+    }
+
+    private void markDeadDinos() {
+        population.getDinosaurs().forEach(dino -> {
+            obstacles.forEach(obstacle -> {
+                if(isColliding(dino, obstacle)) {
+                    dino.setDead();
+                }
+            });
+        });
+    }
+
+    private boolean isColliding(final Dinosaur dino, final Obstacle obstacle) {
+        final Rectangle dinoBoundingBox = dinoBoundingBox(dino);
+        final Rectangle obstacleBoundingBox = obstacleBoundingBox(obstacle);
+        return dinoBoundingBox.intersects(obstacleBoundingBox);
+    }
+
+    private Rectangle obstacleBoundingBox(final Obstacle obstacle) {
+        return new Rectangle((int) obstacle.getXPos(), (int) obstacle.getYPos(),
+                (int) obstacle.getWidth(), (int) obstacle.getHeight());
+    }
+
+    private Rectangle dinoBoundingBox(final Dinosaur dino) {
+        return new Rectangle(DINOSAUR_X_POS, (int) dino.getYPos(),
+                DINOSAUR_WIDTH, DINOSAUR_HEIGHT);
     }
 
     private boolean shouldAddObstacle() {
@@ -90,7 +141,7 @@ public class Emulation {
 
     private void updateDinosaurs() {
         population.getDinosaurs().forEach(dino -> {
-            System.out.printf("Force up %s, Y = %s %n", forceUp, dino.getYPos());
+//            System.out.printf("Force up %s, Y = %s %n", forceUp, dino.getYPos());
             dino.goUp(this.forceUp);
 
             if(dino.getYPos() < 0) {

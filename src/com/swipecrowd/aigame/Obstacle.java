@@ -12,4 +12,10 @@ public class Obstacle {
 
     @Getter
     private double yPos;
+
+    @Getter
+    private double width;
+
+    @Getter
+    private double height;
 }
