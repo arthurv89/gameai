@@ -55,7 +55,7 @@ public class DinoPanel extends JPanel implements KeyListener {
 
         drawBackground(gr);
         drawTime(gr);
-        drawDinosaurs(gr, emulation.getDinosaurs());
+        drawDinosaurs(gr, emulation.getPopulation());
         drawObstacles(gr);
 
         g.drawImage(image, 0, 0, null);
@@ -65,7 +65,18 @@ public class DinoPanel extends JPanel implements KeyListener {
     }
 
     private void drawObstacles(final Graphics g) {
-        g.setColor(Color.BLACK);
+        emulation.getObstacles().forEach(obstacle -> {
+            drawObstacle(g, obstacle);
+        });
+    }
+
+    private void drawObstacle(final Graphics g, final Obstacle obstacle) {
+        g.setColor(Color.RED);
+        g.fillRect(
+                (int) obstacle.getXPos(),
+                bottomY((int) obstacle.getYPos()),
+                20,
+                20);
     }
 
     private void drawDinosaurs(final Graphics g, final Population pop) {
@@ -86,7 +97,14 @@ public class DinoPanel extends JPanel implements KeyListener {
 
     private void drawDinosaur(final Graphics g, final double yPos) {
         g.setColor(Color.BLACK);
-        g.fillRect(0, (int) (getHeight() - yPos - DINOSAUR_HEIGHT), 20, DINOSAUR_HEIGHT);
+        g.fillRect(0,
+                bottomY(yPos),
+                20,
+                DINOSAUR_HEIGHT);
+    }
+
+    private int bottomY(final double yPos) {
+        return (int) (getHeight() - yPos - DINOSAUR_HEIGHT);
     }
 
     public void removeObstacles() {

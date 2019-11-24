@@ -14,12 +14,12 @@ public class Gui {
     private int WIDTH = 500;
     private int HEIGHT = 500;
 
-    public void setup(final Population pop, final Emulation emulation) {
-        createElements(pop, emulation);
+    public void setup(Emulation emulation) {
+        createElements(emulation);
         setupProperties();
     }
 
-    private void createElements(final Population pop, final Emulation emulation) {
+    private void createElements(final Emulation emulation) {
         frame = new JFrame();
         panel = new DinoPanel(emulation);
     }
@@ -33,7 +33,7 @@ public class Gui {
         panel.setFocusable(true);
     }
 
-    public void draw(final Population pop) {
+    public void redraw() {
         panel.repaint();
     }
 
