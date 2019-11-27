@@ -1,9 +1,12 @@
 package com.swipecrowd.aigame;
 
+import com.swipecrowd.aigame.ai.Population;
 import lombok.Getter;
 
 import java.awt.Rectangle;
+import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Stream;
 
 import static com.swipecrowd.aigame.GamePanel.DINOSAUR_HEIGHT;
 import static com.swipecrowd.aigame.GamePanel.DINOSAUR_WIDTH;
@@ -14,12 +17,14 @@ import static com.swipecrowd.aigame.GamePanel.OBSTACLE_Y_POS;
 
 public class Emulation {
     private static final int POP_SIZE = 500;
-    private static final int FPS = 100;
+    private static final int FPS = 100000;
     private static final double timeInBetween = 1000 / FPS;
     private static final double SPAWN_PROBABILITY = 0.02;
     private static final double GRAVITY = 1;
-    private static final double X_SPEED = 10;
+    public static final double X_SPEED = 10;
     private static final double FORCE_UP = GRAVITY * 20;
+    static ArrayList<Integer> obstacleHistory = new ArrayList<Integer>();
+    static ArrayList<Integer> randomAdditionHistory = new ArrayList<Integer>();
 
     private long lastDrawTime;
 
@@ -44,19 +49,19 @@ public class Emulation {
         while (true) {
             resetEmulation();
             runGeneration(gui);
+            population.naturalSelection();
             emulationNo++;
         }
     }
 
     private void resetEmulation() {
         obstacles.clear();
-        population.clear();
         lastDrawTime = 0;
         time = 0;
     }
 
     private void runGeneration(final Gui gui) {
-        int aliveDinos = population.getDinosaurs().size();
+        int aliveDinos = population.getPop().size();
         while(aliveDinos > 0) {
             waitTillNextFrame();
 
@@ -65,14 +70,6 @@ public class Emulation {
             aliveDinos = countAliveDinos();
 
             gui.redraw(time, aliveDinos);
-        }
-    }
-
-    private Action calculateAction(final Dinosaur dino) {
-        if(Math.random() < 0.5) {
-            return new JumpAction();
-        } else {
-            return new NullAction();
         }
     }
 
@@ -100,23 +97,32 @@ public class Emulation {
 
         updateDinosaurs();
         updateObstacles();
+        incrementScore();
 
         markDeadDinos();
         time++;
     }
 
-    private void applyAction(final Action action, final Dinosaur dino) {
+    private void incrementScore() {
+        getAlivePlayers().forEach(x -> x.incrementScore());
+    }
+
+    private void applyAction(final Action action, final Player dino) {
         if(action instanceof JumpAction) {
             jump(dino);
         }
     }
 
     private int countAliveDinos() {
-        return (int) population.getDinosaurs().stream().filter(x -> !x.isDead()).count();
+        return (int) getAlivePlayers().count();
+    }
+
+    private Stream<Player> getAlivePlayers() {
+        return population.getPop().stream().filter(x -> !x.isDead());
     }
 
     private void markDeadDinos() {
-        population.getDinosaurs().forEach(dino -> {
+        population.getPop().forEach(dino -> {
             obstacles.forEach(obstacle -> {
                 if(isColliding(dino, obstacle)) {
                     dino.setDead();
@@ -125,7 +131,7 @@ public class Emulation {
         });
     }
 
-    private boolean isColliding(final Dinosaur dino, final Obstacle obstacle) {
+    private boolean isColliding(final Player dino, final Obstacle obstacle) {
         final Rectangle dinoBoundingBox = dinoBoundingBox(dino);
         final Rectangle obstacleBoundingBox = obstacleBoundingBox(obstacle);
         return dinoBoundingBox.intersects(obstacleBoundingBox);
@@ -136,7 +142,7 @@ public class Emulation {
                 (int) obstacle.getWidth(), (int) obstacle.getHeight());
     }
 
-    private Rectangle dinoBoundingBox(final Dinosaur dino) {
+    private Rectangle dinoBoundingBox(final Player dino) {
         return new Rectangle(DINOSAUR_X_POS, (int) dino.getYPos(),
                 DINOSAUR_WIDTH, DINOSAUR_HEIGHT);
     }
@@ -152,8 +158,8 @@ public class Emulation {
     }
 
     private void updateDinosaurs() {
-        population.getDinosaurs().forEach(dino -> {
-            final Action action = calculateAction(dino);
+        population.getPop().forEach(dino -> {
+            final Action action = dino.getBrain().calculateAction(dino, this);
             applyAction(action, dino);
 
 //            System.out.printf("Force up %s, Y = %s %n", forceUp, dino.getYPos());
@@ -171,7 +177,7 @@ public class Emulation {
         });
     }
 
-    public void jump(final Dinosaur dino) {
+    public void jump(final Player dino) {
         if(!dino.isJumping()) {
             dino.setJumping(true);
             dino.setForceUp(FORCE_UP);

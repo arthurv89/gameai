@@ -1,5 +1,6 @@
 package com.swipecrowd.aigame;
 
+import com.swipecrowd.aigame.ai.Population;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
@@ -64,7 +65,7 @@ public class GamePanel extends JPanel {
     }
 
     private void drawDinosaurs(final Graphics g, final Population pop) {
-        pop.getDinosaurs().iterator().forEachRemaining(x -> {
+        pop.getPop().iterator().forEachRemaining(x -> {
             if(!x.isDead()) {
                 drawDinosaur(g, x.getYPos());
             }
