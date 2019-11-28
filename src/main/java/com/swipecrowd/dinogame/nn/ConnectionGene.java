@@ -1,6 +1,4 @@
-package com.swipecrowd.aigame.ai;
-
-import com.swipecrowd.aigame.Random2;
+package com.swipecrowd.dinogame.nn;
 
 public class ConnectionGene {
     Node fromNode;

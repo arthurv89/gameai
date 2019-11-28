@@ -1,16 +1,15 @@
-package com.swipecrowd.aigame.ai;
+package com.swipecrowd.dinogame.nn;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
-import com.swipecrowd.aigame.Action;
-import com.swipecrowd.aigame.Emulation;
-import com.swipecrowd.aigame.JumpAction;
-import com.swipecrowd.aigame.NullAction;
-import com.swipecrowd.aigame.Obstacle;
-import com.swipecrowd.aigame.Player;
-import com.swipecrowd.aigame.Random2;
+import com.swipecrowd.dinogame.game.action.Action;
+import com.swipecrowd.dinogame.game.Emulation;
+import com.swipecrowd.dinogame.game.action.JumpAction;
+import com.swipecrowd.dinogame.game.action.NullAction;
+import com.swipecrowd.dinogame.game.Obstacle;
+import com.swipecrowd.dinogame.game.Player;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -109,7 +108,7 @@ public class Genome {
     }
 
     private double[] getVision(final Player dino, final Emulation emulation) {
-        final double speed = Emulation.xSpeed;
+        final double speed = Emulation.X_SPEED;
         final Optional<Obstacle> closestObstacle = emulation.getObstacles().stream()
                 .min((x, y) -> (int) (x.getXPos() - y.getXPos()));
         return new double[] {

@@ -1,6 +1,7 @@
-package com.swipecrowd.aigame;
+package com.swipecrowd.dinogame.game;
 
-import com.swipecrowd.aigame.ai.Genome;
+import com.swipecrowd.dinogame.nn.Genome;
+import com.swipecrowd.dinogame.nn.Random2;
 import lombok.Getter;
 import lombok.Setter;
 

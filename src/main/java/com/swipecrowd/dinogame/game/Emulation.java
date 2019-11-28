@@ -1,6 +1,12 @@
-package com.swipecrowd.aigame;
+package com.swipecrowd.dinogame.game;
 
-import com.swipecrowd.aigame.ai.Population;
+import com.swipecrowd.dinogame.game.action.Action;
+import com.swipecrowd.dinogame.game.action.JumpAction;
+import com.swipecrowd.dinogame.nn.Population;
+import com.swipecrowd.dinogame.nn.Random2;
+import com.swipecrowd.dinogame.ui.GamePanel;
+import com.swipecrowd.dinogame.ui.Gui;
+import com.swipecrowd.dinogame.ui.Images;
 import lombok.Getter;
 
 import java.awt.Rectangle;
@@ -8,23 +14,16 @@ import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
 
-import static com.swipecrowd.aigame.GamePanel.DINOSAUR_HEIGHT;
-import static com.swipecrowd.aigame.GamePanel.DINOSAUR_WIDTH;
-import static com.swipecrowd.aigame.GamePanel.DINOSAUR_X_POS;
-import static com.swipecrowd.aigame.GamePanel.OBSTACLE_HEIGHT;
-import static com.swipecrowd.aigame.GamePanel.OBSTACLE_WIDTH;
-import static com.swipecrowd.aigame.GamePanel.OBSTACLE_Y_POS;
-
 public class Emulation {
-    private static final int POP_SIZE = 1000;
-    private static final int FPS = 100;
-    private static final double timeInBetween = 1000 / FPS;
+    private static final int POP_SIZE = 100;
+    private static int fps = 100;
     private static final double SPAWN_PROBABILITY = 0.02;
     private static final double GRAVITY = 1;
-    public static double xSpeed = 10;
+    public static final double X_SPEED = 10;
     private static final double FORCE_UP = GRAVITY * 20;
-    static ArrayList<Integer> obstacleHistory = new ArrayList<Integer>();
-    static ArrayList<Integer> randomAdditionHistory = new ArrayList<Integer>();
+    static ArrayList<Integer> obstacleHistory = new ArrayList<>();
+    static ArrayList<Integer> randomAdditionHistory = new ArrayList<>();
+    private static final double SPEEDUP = 1.0001;
 
     private long lastDrawTime;
 
@@ -59,6 +58,7 @@ public class Emulation {
         obstacles.clear();
         lastDrawTime = 0;
         time = 0;
+        lastSpawnTime = 0;
     }
 
     private void runGeneration(final Gui gui) {
@@ -80,20 +80,26 @@ public class Emulation {
         } else {
             // Wait a bit until we're allowed to draw the frame
             final long currentTime = System.currentTimeMillis();
-            if(currentTime - lastDrawTime < timeInBetween) {
+            if(currentTime - lastDrawTime < getTimeInBetween()) {
                 try {
-                    Thread.sleep((long) (lastDrawTime + timeInBetween - currentTime));
+                    Thread.sleep((long) (lastDrawTime + getTimeInBetween() - currentTime));
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
-            lastDrawTime += timeInBetween;
+            lastDrawTime += getTimeInBetween();
         }
+    }
+
+    private double getTimeInBetween() {
+        return 1000 / fps;
     }
 
     private void updateState(final int frameWidth) {
         if(shouldAddObstacle()) {
-            obstacles.add(new Obstacle(frameWidth, OBSTACLE_Y_POS, OBSTACLE_WIDTH, OBSTACLE_HEIGHT));
+            final double random = Random2.random();
+            final Obstacle obstacle = createObstacle(frameWidth, random);
+            obstacles.add(obstacle);
             lastSpawnTime = time;
         }
 
@@ -103,7 +109,29 @@ public class Emulation {
 
         markDeadDinos();
         time++;
-        xSpeed *= 1.00001;
+        fps *= SPEEDUP;
+    }
+
+    private Obstacle createObstacle(final int frameWidth, final double random) {
+        if(random < 0.3) {
+            return createBigObstacle(frameWidth);
+        } else if(random < 0.6) {
+            return createSmallObstacle(frameWidth);
+        } else {
+            return createSmallManyObstacle(frameWidth);
+        }
+    }
+
+    private Obstacle createBigObstacle(final int frameWidth) {
+        return new Obstacle(frameWidth, GamePanel.OBSTACLE_Y_POS, Images.cactusBigImage);
+    }
+
+    private Obstacle createSmallObstacle(final int frameWidth) {
+        return new Obstacle(frameWidth, GamePanel.OBSTACLE_Y_POS, Images.cactusSmallImage);
+    }
+
+    private Obstacle createSmallManyObstacle(final int frameWidth) {
+        return new Obstacle(frameWidth, GamePanel.OBSTACLE_Y_POS, Images.cactusSmallManyImage);
     }
 
     private void incrementScore() {
@@ -142,23 +170,24 @@ public class Emulation {
 
     private Rectangle obstacleBoundingBox(final Obstacle obstacle) {
         return new Rectangle((int) obstacle.getXPos(), (int) obstacle.getYPos(),
-                (int) obstacle.getWidth(), (int) obstacle.getHeight());
+                obstacle.getImage().getWidth(), obstacle.getImage().getHeight());
     }
 
     private Rectangle dinoBoundingBox(final Player dino) {
-        return new Rectangle(DINOSAUR_X_POS, (int) dino.getYPos(),
-                DINOSAUR_WIDTH, DINOSAUR_HEIGHT);
+        return new Rectangle(GamePanel.DINOSAUR_X_POS, (int) dino.getYPos(),
+                GamePanel.DINOSAUR_WIDTH, GamePanel.DINOSAUR_HEIGHT);
     }
 
     private boolean shouldAddObstacle() {
-        return Random2.random() < SPAWN_PROBABILITY && time - lastSpawnTime > 50;
+        final double rand = Random2.random();
+        return rand < SPAWN_PROBABILITY && time - lastSpawnTime > 50;
     }
 
     private void updateObstacles() {
         obstacles.forEach(obstacle -> {
-            obstacle.setXPos(obstacle.getXPos() - xSpeed);
+            obstacle.setXPos(obstacle.getXPos() - X_SPEED);
         });
-        obstacles.removeIf(obstacle -> obstacle.getXPos() < 0);
+        obstacles.removeIf(obstacle -> obstacle.getXPos() + obstacle.getWidth() < 0);
     }
 
     private void updateDinosaurs() {

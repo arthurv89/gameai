@@ -1,7 +1,6 @@
-package com.swipecrowd.aigame.ai;
+package com.swipecrowd.dinogame.nn;
 
-import com.swipecrowd.aigame.Player;
-import com.swipecrowd.aigame.Random2;
+import com.swipecrowd.dinogame.game.Player;
 
 import java.util.ArrayList;
 

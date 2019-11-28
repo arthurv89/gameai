@@ -1,4 +1,4 @@
-package com.swipecrowd.aigame;
+package com.swipecrowd.dinogame.nn;
 
 import java.util.Random;
 

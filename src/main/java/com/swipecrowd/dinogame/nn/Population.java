@@ -1,6 +1,6 @@
-package com.swipecrowd.aigame.ai;
+package com.swipecrowd.dinogame.nn;
 
-import com.swipecrowd.aigame.Player;
+import com.swipecrowd.dinogame.game.Player;
 import lombok.Getter;
 
 import java.util.ArrayList;

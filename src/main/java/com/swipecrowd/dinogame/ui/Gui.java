@@ -1,5 +1,6 @@
-package com.swipecrowd.aigame;
+package com.swipecrowd.dinogame.ui;
 
+import com.swipecrowd.dinogame.game.Emulation;
 import lombok.Getter;
 
 import javax.swing.JFrame;
@@ -11,8 +12,8 @@ public class Gui {
     @Getter
     private GamePanel panel;
 
-    private static final int WIDTH = 500;
-    private static final int HEIGHT = 500;
+    private static final int WIDTH = 1280;
+    private static final int HEIGHT = 800;
     private Emulation emulation;
 
     public void setup(Emulation emulation) {

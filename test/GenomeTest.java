@@ -1,4 +1,4 @@
-import com.swipecrowd.aigame.ai.Genome;
+import com.swipecrowd.dinogame.nn.Genome;
 import org.junit.Test;
 
 public class GenomeTest {

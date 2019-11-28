@@ -1,4 +1,4 @@
-package com.swipecrowd.aigame.ai;
+package com.swipecrowd.dinogame.nn;
 
 import java.util.ArrayList;
 

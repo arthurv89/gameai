@@ -1,4 +1,6 @@
-package com.swipecrowd.aigame;
+package com.swipecrowd.dinogame.ui;
+
+import com.swipecrowd.dinogame.game.Emulation;
 
 import javax.swing.JFrame;
 import java.awt.event.KeyEvent;

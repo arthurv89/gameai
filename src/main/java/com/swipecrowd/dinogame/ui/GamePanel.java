@@ -1,6 +1,8 @@
-package com.swipecrowd.aigame;
+package com.swipecrowd.dinogame.ui;
 
-import com.swipecrowd.aigame.ai.Population;
+import com.swipecrowd.dinogame.game.Emulation;
+import com.swipecrowd.dinogame.game.Obstacle;
+import com.swipecrowd.dinogame.nn.Population;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
@@ -13,21 +15,20 @@ import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.swipecrowd.dinogame.ui.Images.dinoImage;
+
 @RequiredArgsConstructor
 public class GamePanel extends JPanel {
     public static final int DINOSAUR_X_POS = 0;
     public static final int DINOSAUR_WIDTH = 50;
     public static final int DINOSAUR_HEIGHT = 50;
     public static final double OBSTACLE_Y_POS = 0;
-    public static final double OBSTACLE_WIDTH = 30;
-    public static final double OBSTACLE_HEIGHT = 60;
 
     private final Emulation emulation;
     private static final Map<?, ?> renderingHints = createRenderingHints();
     @Setter
     private int time;
     private int aliveDinos;
-
 
     private void drawScreen(final Graphics2D g) {
         drawBackground(g);
@@ -56,12 +57,11 @@ public class GamePanel extends JPanel {
     }
 
     private void drawObstacle(final Graphics g, final Obstacle obstacle) {
-        g.setColor(Color.RED);
-        g.fillRect(
+        final int height = obstacle.getImage().getHeight();
+        g.drawImage(obstacle.getImage(),
                 (int) obstacle.getXPos(),
-                bottomY((int) obstacle.getYPos()),
-                (int) obstacle.getWidth(),
-                (int) obstacle.getHeight());
+                bottomY(obstacle.getYPos(), height),
+                null);
     }
 
     private void drawDinosaurs(final Graphics g, final Population pop) {
@@ -84,15 +84,11 @@ public class GamePanel extends JPanel {
     }
 
     private void drawDinosaur(final Graphics g, final double yPos) {
-        g.setColor(Color.BLACK);
-        g.drawRect(DINOSAUR_X_POS,
-                bottomY(yPos),
-                DINOSAUR_WIDTH,
-                DINOSAUR_HEIGHT);
+        g.drawImage(dinoImage, DINOSAUR_X_POS, bottomY(yPos, dinoImage.getHeight()), null);
     }
 
-    private int bottomY(final double yPos) {
-        return (int) (getHeight() - yPos - DINOSAUR_HEIGHT);
+    private int bottomY(final double yPos, final int height) {
+        return (int) (getHeight() - yPos - height);
     }
 
 
