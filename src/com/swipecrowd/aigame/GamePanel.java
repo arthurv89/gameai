@@ -67,6 +67,7 @@ public class GamePanel extends JPanel {
     private void drawDinosaurs(final Graphics g, final Population pop) {
         pop.getPop().iterator().forEachRemaining(x -> {
             if(!x.isDead()) {
+                g.setColor(x.getColor());
                 drawDinosaur(g, x.getYPos());
             }
         });

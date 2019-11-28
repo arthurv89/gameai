@@ -16,12 +16,12 @@ import static com.swipecrowd.aigame.GamePanel.OBSTACLE_WIDTH;
 import static com.swipecrowd.aigame.GamePanel.OBSTACLE_Y_POS;
 
 public class Emulation {
-    private static final int POP_SIZE = 500;
-    private static final int FPS = 100000;
+    private static final int POP_SIZE = 1000;
+    private static final int FPS = 100;
     private static final double timeInBetween = 1000 / FPS;
     private static final double SPAWN_PROBABILITY = 0.02;
     private static final double GRAVITY = 1;
-    public static final double X_SPEED = 10;
+    public static double xSpeed = 10;
     private static final double FORCE_UP = GRAVITY * 20;
     static ArrayList<Integer> obstacleHistory = new ArrayList<Integer>();
     static ArrayList<Integer> randomAdditionHistory = new ArrayList<Integer>();
@@ -37,6 +37,7 @@ public class Emulation {
     @Getter
     private int emulationNo = 0;
     private int time;
+    private int lastSpawnTime;
 
     public void start() {
         final Gui gui = new Gui();
@@ -90,9 +91,10 @@ public class Emulation {
         }
     }
 
-    private void updateState(final int xPos) {
+    private void updateState(final int frameWidth) {
         if(shouldAddObstacle()) {
-            obstacles.add(new Obstacle(xPos, OBSTACLE_Y_POS, OBSTACLE_WIDTH, OBSTACLE_HEIGHT));
+            obstacles.add(new Obstacle(frameWidth, OBSTACLE_Y_POS, OBSTACLE_WIDTH, OBSTACLE_HEIGHT));
+            lastSpawnTime = time;
         }
 
         updateDinosaurs();
@@ -101,6 +103,7 @@ public class Emulation {
 
         markDeadDinos();
         time++;
+        xSpeed *= 1.00001;
     }
 
     private void incrementScore() {
@@ -148,13 +151,14 @@ public class Emulation {
     }
 
     private boolean shouldAddObstacle() {
-        return Math.random() < SPAWN_PROBABILITY;
+        return Random2.random() < SPAWN_PROBABILITY && time - lastSpawnTime > 50;
     }
 
     private void updateObstacles() {
         obstacles.forEach(obstacle -> {
-            obstacle.setXPos(obstacle.getXPos() - X_SPEED);
+            obstacle.setXPos(obstacle.getXPos() - xSpeed);
         });
+        obstacles.removeIf(obstacle -> obstacle.getXPos() < 0);
     }
 
     private void updateDinosaurs() {

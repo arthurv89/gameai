@@ -10,6 +10,7 @@ import com.swipecrowd.aigame.JumpAction;
 import com.swipecrowd.aigame.NullAction;
 import com.swipecrowd.aigame.Obstacle;
 import com.swipecrowd.aigame.Player;
+import com.swipecrowd.aigame.Random2;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -66,8 +67,8 @@ public class Genome {
     private ImmutableList<Node> createNodes() {
         return Streams.concat(
                 createInputNodes(),
-                Stream.of(createBiasNode()),
-                createOutputNodes()
+                createOutputNodes(),
+                Stream.of(createBiasNode())
         ).collect(Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf));
     }
     private Stream<Node> createInputNodes() {
@@ -75,12 +76,12 @@ public class Genome {
     }
 
     private Node createBiasNode() {
-        return new Node(inputs, 0, "Bias node");
+        return new Node(inputs + outputs, 0, "Bias node");
     }
 
 
     private Stream<Node> createOutputNodes() {
-        return intStream(outputs).map(j -> new Node(j + inputs + 1, 1, "Output node " + j));
+        return intStream(outputs).map(j -> new Node(j + inputs, 1, "Output node " + j));
     }
 
     private Stream<Integer> intStream(final int genomeInputs) {
@@ -102,13 +103,13 @@ public class Genome {
 
         switch(maxIndex) {
             case 0:
-                return new NullAction();
+                return new JumpAction();
         }
-        return new JumpAction();
+        return new NullAction();
     }
 
     private double[] getVision(final Player dino, final Emulation emulation) {
-        final double speed = Emulation.X_SPEED;
+        final double speed = Emulation.xSpeed;
         final Optional<Obstacle> closestObstacle = emulation.getObstacles().stream()
                 .min((x, y) -> (int) (x.getXPos() - y.getXPos()));
         return new double[] {
@@ -125,7 +126,7 @@ public class Genome {
 
 
 //    Action calculateAction(final Dinosaur dino) {
-//        if(Math.random() < 0.5) {
+//        if(Random2.random() < 0.5) {
 //            return new JumpAction();
 //        } else {
 //            return new NullAction();
@@ -162,19 +163,19 @@ public class Genome {
             addConnection(innovationHistory);
         }
 
-        double rand1 = Math.random();
+        double rand1 = Random2.random();
         if (rand1<0.8) { // 80% of the time mutate weights
             genes.forEach(ConnectionGene::mutateWeight);
         }
         //5% of the time add a new connection
-        double rand2 = Math.random();
+        double rand2 = Random2.random();
         if (rand2<0.08) {
             addConnection(innovationHistory);
         }
 
 
         //1% of the time add a node
-        double rand3 = Math.random();
+        double rand3 = Random2.random();
         if (rand3<0.02) {
             addNode(innovationHistory);
         }
@@ -190,10 +191,10 @@ public class Genome {
             addConnection(innovationHistory);
             return;
         }
-        int randomConnection = (int) Math.floor(Math.random() * genes.size());
+        int randomConnection = (int) Math.floor(Random2.random() * genes.size());
 
         while (genes.get(randomConnection).fromNode == nodes.get(biasNode) && genes.size() !=1 ) {//dont disconnect bias
-            randomConnection = (int) Math.floor(Math.random() * genes.size());
+            randomConnection = (int) Math.floor(Random2.random() * genes.size());
         }
 
         genes.get(randomConnection).enabled = false;//disable it
@@ -237,12 +238,12 @@ public class Genome {
 
 
         //get random nodes
-        int randomNode1 = (int) Math.floor(Math.random() * nodes.size());
-        int randomNode2 = (int) Math.floor(Math.random() * nodes.size());
+        int randomNode1 = (int) Math.floor(Random2.random() * nodes.size());
+        int randomNode2 = (int) Math.floor(Random2.random() * nodes.size());
         while (randomConnectionNodesAreShit(randomNode1, randomNode2)) {//while the random nodes are no good
             //get new ones
-            randomNode1 = (int) Math.floor(Math.random() * nodes.size());
-            randomNode2 = (int) Math.floor(Math.random() * nodes.size());
+            randomNode1 = (int) Math.floor(Random2.random() * nodes.size());
+            randomNode2 = (int) Math.floor(Random2.random() * nodes.size());
         }
         int temp;
         if (nodes.get(randomNode1).layer > nodes.get(randomNode2).layer) {//if the first random node is after the second then switch
@@ -256,7 +257,7 @@ public class Genome {
         int connectionInnovationNumber = getInnovationNumber(innovationHistory, nodes.get(randomNode1), nodes.get(randomNode2));
         //add the connection with a random array
 
-        genes.add(new ConnectionGene(nodes.get(randomNode1), nodes.get(randomNode2), Math.random()*2-1, connectionInnovationNumber));//changed this so if error here
+        genes.add(new ConnectionGene(nodes.get(randomNode1), nodes.get(randomNode2), Random2.random()*2-1, connectionInnovationNumber));//changed this so if error here
         connectNodes();
     }
 
@@ -336,11 +337,11 @@ public class Genome {
             if (parent2gene != -1) {//if the genes match
                 if (!gene.enabled || !parent2.genes.get(parent2gene).enabled) {//if either of the matching genes are disabled
 
-                    if (Math.random() < 0.75) {//75% of the time disabel the childs gene
+                    if (Random2.random() < 0.75) {//75% of the time disabel the childs gene
                         setEnabled = false;
                     }
                 }
-                double rand = Math.random();
+                double rand = Random2.random();
                 if (rand<0.5) {
                     childGenes.add(gene);
 
@@ -366,10 +367,13 @@ public class Genome {
         //clone all the connections so that they connect the childs new nodes
         for ( int i =0; i<childGenes.size(); i++) {
             final ConnectionGene childGene = childGenes.get(i);
-            final Node fromNode = child.getNode(childGene.fromNode.number);
-            final Node toNode = child.getNode(childGene.toNode.number);
-            child.genes.add(childGene.clone(fromNode, toNode));
-            child.genes.get(i).enabled = isEnabled.get(i);
+            if(childGene.fromNode.number < child.getNodes().size() && childGene.toNode.number < child.getNodes().size()) {
+                final Node fromNode = child.getNode(childGene.fromNode.number);
+                final Node toNode = child.getNode(childGene.toNode.number);
+                final ConnectionGene conn = childGene.clone(fromNode, toNode);
+                child.genes.add(conn);
+                conn.enabled = isEnabled.get(i);
+            }
         }
 
         child.connectNodes();

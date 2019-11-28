@@ -4,12 +4,11 @@ import com.swipecrowd.aigame.Player;
 import lombok.Getter;
 
 import java.util.ArrayList;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.IntStream;
 
 public class Population {
     @Getter
-    CopyOnWriteArrayList<Player> pop = new CopyOnWriteArrayList<>();
+    ArrayList<Player> pop = new ArrayList<>();
     private final int size;
     private boolean massExtinctionEvent = false;
     ArrayList<Player> genPlayers = new ArrayList<Player>();
@@ -27,7 +26,10 @@ public class Population {
 
     private void createPopulation() {
         IntStream.rangeClosed(1, size)
-                .forEach(x -> pop.add(new Player()));
+                .forEach(x -> {
+                    final Player player = new Player();
+                    pop.add(player);
+                });
     }
 
     public void naturalSelection() {
@@ -73,7 +75,7 @@ public class Population {
             children.add(species.get(0).giveMeBaby(innovationHistory));//get babies from the best species
         }
         pop.clear();
-        pop = new CopyOnWriteArrayList<>(children); //set the children as the current population
+        pop = new ArrayList<>(children); //set the children as the current population
         gen+=1;
         for (Player player : pop) {//generate networks for each of the children
             player.brain.generateNetwork();
@@ -115,8 +117,9 @@ public class Population {
                 species.add(new Species(pop.get(i)));
             }
         }
+        species.removeIf(species -> species.players.size() == 0);
     }
-    //------------------------------------------------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------------------------------------
     //calculates the fitness of all of the players
     void calculateFitness() {
         for (int i =1; i<pop.size(); i++) {

@@ -4,6 +4,7 @@ import com.swipecrowd.aigame.ai.Genome;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.awt.Color;
 import java.util.ArrayList;
 
 public class Player {
@@ -24,6 +25,9 @@ public class Player {
     @Getter
     @Setter
     private boolean jumping = false;
+
+    @Getter
+    private Color color = Color.getHSBColor((float) Random2.random(), 1, 1);
 
     public int gen = 0;
     int bestScore =0;//stores the score achieved used for replay
@@ -51,6 +55,7 @@ public class Player {
         clone.fitness = fitness;
         clone.brain.generateNetwork();
         clone.gen = gen;
+        clone.color = color;
         clone.bestScore = score;
         return clone;
     }
@@ -65,6 +70,7 @@ public class Player {
     public Player cloneForReplay() {
         Player clone = new Player();
         clone.brain = brain.clone();
+        clone.color = color;
         clone.fitness = fitness;
         clone.brain.generateNetwork();
         clone.gen = gen;

@@ -1,6 +1,7 @@
 package com.swipecrowd.aigame.ai;
 
 import com.swipecrowd.aigame.Player;
+import com.swipecrowd.aigame.Random2;
 
 import java.util.ArrayList;
 
@@ -148,7 +149,7 @@ public class Species {
     //gets baby from the players in this species
     Player giveMeBaby(ArrayList<ConnectionHistory> innovationHistory) {
         Player baby;
-        if (Math.random() < 0.25) {//25% of the time there is no crossover and the child is simply a clone of a random(ish) player
+        if (Random2.random() < 0.25) {//25% of the time there is no crossover and the child is simply a clone of a random(ish) player
             baby = selectPlayer().clone();
         } else {//75% of the time do crossover
 
@@ -175,7 +176,7 @@ public class Species {
             fitnessSum += players.get(i).fitness;
         }
 
-        double rand = Math.random() * fitnessSum;
+        double rand = Random2.random() * fitnessSum;
         double runningSum = 0;
 
         for (int i = 0; i<players.size(); i++) {

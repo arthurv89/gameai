@@ -1,6 +1,6 @@
 package com.swipecrowd.aigame.ai;
 
-import java.util.Random;
+import com.swipecrowd.aigame.Random2;
 
 public class ConnectionGene {
     Node fromNode;
@@ -20,11 +20,11 @@ public class ConnectionGene {
     //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //changes the weight
     void mutateWeight() {
-        double rand2 = Math.random();
+        double rand2 = Random2.random();
         if (rand2 < 0.1) {//10% of the time completely change the weight
-            weight = Math.random() * 2 - 1;
+            weight = Random2.random() * 2 - 1;
         } else {//otherwise slightly change it
-            weight += new Random().nextGaussian()/50;
+            weight += new Random2().nextGaussian()/50;
             //keep weight between bounds
             if(weight > 1){
                 weight = 1;
