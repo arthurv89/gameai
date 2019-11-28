@@ -1,5 +1,7 @@
 package com.swipecrowd.dinogame.nn;
 
+import com.swipecrowd.dinogame.utils.Random2;
+
 public class ConnectionGene {
     Node fromNode;
     Node toNode;

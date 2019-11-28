@@ -6,10 +6,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import com.swipecrowd.dinogame.game.action.Action;
 import com.swipecrowd.dinogame.game.Emulation;
+import com.swipecrowd.dinogame.game.action.DuckingAction;
 import com.swipecrowd.dinogame.game.action.JumpAction;
 import com.swipecrowd.dinogame.game.action.NullAction;
 import com.swipecrowd.dinogame.game.Obstacle;
 import com.swipecrowd.dinogame.game.Player;
+import com.swipecrowd.dinogame.utils.Random2;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -21,8 +23,8 @@ import java.util.stream.Stream;
 
 public class Genome {
     private static final int inputs = 8;
-    private static final int outputs = 2;
-    private static int layers = 2;
+    private static final int outputs = 3;
+    private static int layers = 3;
     private static int biasNode = inputs;
 
     ArrayList<ConnectionGene> genes = new ArrayList<>();//a list of connections between nodes which represent the NN
@@ -89,7 +91,8 @@ public class Genome {
 
     public Action calculateAction(Player dino, final Emulation emulation) {
         //get the output of the neural network
-        final double[] decision = feedForward(getVision(dino, emulation));
+        final double[] vision = getVision(dino, emulation);
+        final double[] decision = feedForward(vision);
 
         double max = Integer.MIN_VALUE;
         Integer maxIndex = null;
@@ -101,36 +104,28 @@ public class Genome {
         }
 
         switch(maxIndex) {
-            case 0:
-                return new JumpAction();
+            case 0: return new NullAction();
+            case 1: return new DuckingAction();
+            case 2: return new JumpAction();
+            default: throw new RuntimeException();
         }
-        return new NullAction();
     }
 
     private double[] getVision(final Player dino, final Emulation emulation) {
-        final double speed = Emulation.X_SPEED;
         final Optional<Obstacle> closestObstacle = emulation.getObstacles().stream()
                 .min((x, y) -> (int) (x.getXPos() - y.getXPos()));
         return new double[] {
-            speed,
             dino.getYPos(),
             dino.isJumping() ? 1 : 0,
+            dino.isDucking() ? 1 : 0,
             closestObstacle.isPresent() ? 1 : 0,
             closestObstacle.map(x -> x.getXPos()).orElse(0.0),
             closestObstacle.map(x -> x.getYPos()).orElse(0.0),
-            closestObstacle.map(x -> x.getHeight()).orElse(0.0),
-            closestObstacle.map(x -> x.getWidth()).orElse(0.0)
+            closestObstacle.map(x -> x.getHeight()).orElse(0),
+            closestObstacle.map(x -> x.getWidth()).orElse(0)
         };
     }
 
-
-//    Action calculateAction(final Dinosaur dino) {
-//        if(Random2.random() < 0.5) {
-//            return new JumpAction();
-//        } else {
-//            return new NullAction();
-//        }
-//    }
 
     double[] feedForward(double[] inputValues) {
         Preconditions.checkArgument(inputValues.length == inputs);

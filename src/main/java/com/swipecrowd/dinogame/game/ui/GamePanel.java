@@ -1,4 +1,4 @@
-package com.swipecrowd.dinogame.ui;
+package com.swipecrowd.dinogame.game.ui;
 
 import com.swipecrowd.dinogame.game.Emulation;
 import com.swipecrowd.dinogame.game.Obstacle;
@@ -14,18 +14,16 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import static com.swipecrowd.dinogame.ui.Images.dinoRunningImage0;
-import static com.swipecrowd.dinogame.ui.Images.dinoRunningImage1;
-import static com.swipecrowd.dinogame.ui.Images.dinoJumpingImage;
 
 @RequiredArgsConstructor
 public class GamePanel extends JPanel {
     public static final int DINOSAUR_X_POS = 0;
-    public static final int DINOSAUR_WIDTH = 50;
-    public static final int DINOSAUR_HEIGHT = 50;
-    public static final double OBSTACLE_Y_POS = 0;
+    public static final double CACTUS_Y_POS = 0;
+    public static final double HIGH_BIRD_Y_POS = 200;
+    public static final double MEDIUM_BIRD_Y_POS = 130;
+    public static final double LOW_BIRD_Y_POS = 70;
 
     private final Emulation emulation;
     private static final Map<?, ?> renderingHints = createRenderingHints();
@@ -60,8 +58,9 @@ public class GamePanel extends JPanel {
     }
 
     private void drawObstacle(final Graphics g, final Obstacle obstacle) {
-        final int height = obstacle.getImage().getHeight();
-        g.drawImage(obstacle.getImage(),
+        final BufferedImage image = emulation.animated(obstacle.getImages());
+        final int height = image.getHeight();
+        g.drawImage(image,
                 (int) obstacle.getXPos(),
                 bottomY(obstacle.getYPos(), height),
                 null);
@@ -87,14 +86,9 @@ public class GamePanel extends JPanel {
     }
 
     private void drawDinosaur(final Graphics g, final Player player) {
-        if(player.isJumping()) {
-            drawDinoImage(g, dinoJumpingImage, player);
-        } else {
-            final BufferedImage image = time %2 == 0
-                    ? dinoRunningImage0
-                    : dinoRunningImage1;
-            drawDinoImage(g, image, player);
-        }
+        final List<BufferedImage> images = player.getCurrentImages();
+        final BufferedImage image = emulation.animated(images);
+        drawDinoImage(g, image, player);
     }
 
     private void drawDinoImage(final Graphics g, final BufferedImage image, final Player player) {

@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.awt.image.BufferedImage;
+import java.util.Collections;
+import java.util.List;
 
 @AllArgsConstructor
 public class Obstacle {
@@ -16,13 +18,18 @@ public class Obstacle {
     private double yPos;
 
     @Getter
-    private final BufferedImage image;
+    private final List<BufferedImage> images;
 
-    public double getHeight() {
-        return image.getHeight();
+    public Obstacle(final int xPos, final double yPos, final BufferedImage image) {
+        this(xPos, yPos, Collections.singletonList(image));
     }
 
-    public double getWidth() {
-        return image.getWidth();
+    public int getHeight() {
+        return images.get(0).getHeight();
+    }
+
+    public int getWidth() {
+        return images.get(0).getWidth();
     }
 }
+

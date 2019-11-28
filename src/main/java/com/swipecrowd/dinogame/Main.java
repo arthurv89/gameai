@@ -7,6 +7,7 @@ public class Main {
         try {
             new Emulation().start();
         } catch (Exception e) {
+            e.printStackTrace();
             System.exit(1);
         }
     }

@@ -1,6 +1,7 @@
 package com.swipecrowd.dinogame.nn;
 
 import com.swipecrowd.dinogame.game.Player;
+import com.swipecrowd.dinogame.utils.Random2;
 
 import java.util.ArrayList;
 

@@ -1,4 +1,4 @@
-package com.swipecrowd.dinogame.ui;
+package com.swipecrowd.dinogame.game.ui;
 
 import com.swipecrowd.dinogame.game.Emulation;
 import lombok.Getter;

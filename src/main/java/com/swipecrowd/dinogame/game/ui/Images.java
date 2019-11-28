@@ -1,4 +1,4 @@
-package com.swipecrowd.dinogame.ui;
+package com.swipecrowd.dinogame.game.ui;
 
 import com.swipecrowd.dinogame.utils.ImageUtils;
 
@@ -12,6 +12,11 @@ public class Images {
     public static final BufferedImage cactusSmallImage = ImageUtils.loadImage("cactusSmall0000.png");
     public static final BufferedImage cactusBigImage = ImageUtils.loadImage("cactusBig0000.png");
     public static final BufferedImage cactusSmallManyImage = ImageUtils.loadImage("cactusSmallMany0000.png");
+    public static final BufferedImage birdImage0 = ImageUtils.loadImage("berd.png");
+    public static final BufferedImage birdImage1 = ImageUtils.loadImage("berd2.png");
+
+    public static final BufferedImage dinoDuck0 = ImageUtils.loadImage("dinoduck0000.png");
+    public static final BufferedImage dinoDuck1 = ImageUtils.loadImage("dinoduck0001.png");
 
 
 //    private static BufferedImage enlarge(final BufferedImage loadImage, final double factor) {

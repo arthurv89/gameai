@@ -1,12 +1,21 @@
 package com.swipecrowd.dinogame.game;
 
 import com.swipecrowd.dinogame.nn.Genome;
-import com.swipecrowd.dinogame.nn.Random2;
+import com.swipecrowd.dinogame.utils.Random2;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static com.swipecrowd.dinogame.game.ui.Images.dinoDuck0;
+import static com.swipecrowd.dinogame.game.ui.Images.dinoDuck1;
+import static com.swipecrowd.dinogame.game.ui.Images.dinoJumpingImage;
+import static com.swipecrowd.dinogame.game.ui.Images.dinoRunningImage0;
+import static com.swipecrowd.dinogame.game.ui.Images.dinoRunningImage1;
 
 public class Player {
     public double fitness;
@@ -26,6 +35,10 @@ public class Player {
     @Getter
     @Setter
     private boolean jumping = false;
+
+    @Getter
+    @Setter
+    private boolean ducking = false;
 
     @Getter
     private Color color = Color.getHSBColor((float) Random2.random(), 1, 1);
@@ -94,5 +107,15 @@ public class Player {
 
     public void incrementScore() {
         score++;
+    }
+
+    public List<BufferedImage> getCurrentImages() {
+        if(isJumping()) {
+            return Arrays.asList(dinoJumpingImage);
+        } else if(isDucking()) {
+            return Arrays.asList(dinoDuck0, dinoDuck1);
+        } else {
+            return Arrays.asList(dinoRunningImage0, dinoRunningImage1);
+        }
     }
 }
