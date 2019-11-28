@@ -2,6 +2,7 @@ package com.swipecrowd.dinogame.ui;
 
 import com.swipecrowd.dinogame.game.Emulation;
 import com.swipecrowd.dinogame.game.Obstacle;
+import com.swipecrowd.dinogame.game.Player;
 import com.swipecrowd.dinogame.nn.Population;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -15,7 +16,9 @@ import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.swipecrowd.dinogame.ui.Images.dinoImage;
+import static com.swipecrowd.dinogame.ui.Images.dinoRunningImage0;
+import static com.swipecrowd.dinogame.ui.Images.dinoRunningImage1;
+import static com.swipecrowd.dinogame.ui.Images.dinoJumpingImage;
 
 @RequiredArgsConstructor
 public class GamePanel extends JPanel {
@@ -68,7 +71,7 @@ public class GamePanel extends JPanel {
         pop.getPop().iterator().forEachRemaining(x -> {
             if(!x.isDead()) {
                 g.setColor(x.getColor());
-                drawDinosaur(g, x.getYPos());
+                drawDinosaur(g, x);
             }
         });
     }
@@ -83,8 +86,19 @@ public class GamePanel extends JPanel {
         g.fillRect(0, 0, getWidth(), getHeight());
     }
 
-    private void drawDinosaur(final Graphics g, final double yPos) {
-        g.drawImage(dinoImage, DINOSAUR_X_POS, bottomY(yPos, dinoImage.getHeight()), null);
+    private void drawDinosaur(final Graphics g, final Player player) {
+        if(player.isJumping()) {
+            drawDinoImage(g, dinoJumpingImage, player);
+        } else {
+            final BufferedImage image = time %2 == 0
+                    ? dinoRunningImage0
+                    : dinoRunningImage1;
+            drawDinoImage(g, image, player);
+        }
+    }
+
+    private void drawDinoImage(final Graphics g, final BufferedImage image, final Player player) {
+        g.drawImage(image, DINOSAUR_X_POS, bottomY(player.getYPos(), image.getHeight()), null);
     }
 
     private int bottomY(final double yPos, final int height) {

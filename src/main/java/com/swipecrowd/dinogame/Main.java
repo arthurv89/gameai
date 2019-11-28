@@ -4,6 +4,10 @@ import com.swipecrowd.dinogame.game.Emulation;
 
 public class Main {
     public static void main(String[] args) {
-        new Emulation().start();
+        try {
+            new Emulation().start();
+        } catch (Exception e) {
+            System.exit(1);
+        }
     }
 }
