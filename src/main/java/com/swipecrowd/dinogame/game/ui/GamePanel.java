@@ -8,14 +8,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import javax.swing.JPanel;
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiredArgsConstructor
 public class GamePanel extends JPanel {
@@ -29,26 +33,40 @@ public class GamePanel extends JPanel {
     private static final Map<?, ?> renderingHints = createRenderingHints();
     @Setter
     private int time;
+    @Setter
     private int aliveDinos;
+    @Setter
+    private double spawnRate;
+    @Setter
+    private double speed;
+    @Setter
+    private double timeBetweenObstacles;
 
     private void drawScreen(final Graphics2D g) {
         drawBackground(g);
-        drawTime(g);
-        drawIteration(g, emulation.getEmulationNo());
-        drawDinoCount(g, aliveDinos);
+        drawText(g, createDebugMap());
         drawDinosaurs(g, emulation.getPopulation());
         drawObstacles(g);
     }
 
-    private void drawDinoCount(final Graphics2D g, final int aliveDinos) {
-        g.setColor(Color.BLACK);
-        g.drawString(String.valueOf(aliveDinos), 0, 60);
+    private Map<String, String> createDebugMap() {
+        final Map<String, String> map = new LinkedHashMap<>();
+        map.put("Time", String.valueOf(time));
+        map.put("Iteration", String.valueOf(emulation.getEmulationNo()));
+        map.put("Dino count", String.valueOf(aliveDinos));
+        map.put("Speed", String.valueOf(speed));
+        map.put("Spawn rate", String.valueOf(spawnRate));
+        map.put("Time between obstacles", String.valueOf(timeBetweenObstacles));
+        return map;
     }
 
-    private void drawIteration(final Graphics2D g, final int emulationNo) {
+    private void drawText(final Graphics2D g, final Map<String, String> map) {
         g.setColor(Color.BLACK);
-        g.drawString(String.valueOf(emulationNo), 0, 40);
-
+        final AtomicInteger i = new AtomicInteger(1);
+        map.forEach((k, v) -> {
+            final int j = i.getAndIncrement();
+            g.drawString(k + ": " + v, 0, j * 20);
+        });
     }
 
     private void drawObstacles(final Graphics g) {
@@ -67,17 +85,25 @@ public class GamePanel extends JPanel {
     }
 
     private void drawDinosaurs(final Graphics g, final Population pop) {
+        Map<String, Callable<?>> map = new HashMap<>();
         pop.getPop().iterator().forEachRemaining(x -> {
             if(!x.isDead()) {
-                g.setColor(x.getColor());
-                drawDinosaur(g, x);
+                final double y = x.getYPos();
+                final int d = x.isDucking() ? 1 : 0;
+                final int j = x.isJumping() ? 1 : 0;
+                map.put(String.format("%s,%s,%s", y, d, j), () -> {
+                    drawDinosaur(g, x);
+                    return null;
+                });
             }
         });
-    }
-
-    private void drawTime(final Graphics g) {
-        g.setColor(Color.BLACK);
-        g.drawString(String.valueOf(time), 0, 20);
+        map.forEach((x, y) -> {
+            try {
+                y.call();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void drawBackground(final Graphics g) {
@@ -88,7 +114,15 @@ public class GamePanel extends JPanel {
     private void drawDinosaur(final Graphics g, final Player player) {
         final List<BufferedImage> images = player.getCurrentImages();
         final BufferedImage image = emulation.animated(images);
-        drawDinoImage(g, image, player);
+
+        BufferedImage transparentImage = new BufferedImage(image.getWidth(), image.getHeight(),
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = (Graphics2D) transparentImage.getGraphics();
+        g2d.setComposite(AlphaComposite.SrcOver.derive(0.5f));
+        // set the transparency level in range 0.0f - 1.0f
+        g2d.drawImage(image, 0, 0, null);
+
+        drawDinoImage(g, transparentImage, player);
     }
 
     private void drawDinoImage(final Graphics g, final BufferedImage image, final Player player) {
@@ -122,9 +156,5 @@ public class GamePanel extends JPanel {
         hintsMap.put(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
         hintsMap.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         return new RenderingHints(hintsMap);
-    }
-
-    public void setAliveDinos(final int aliveDinos) {
-        this.aliveDinos = aliveDinos;
     }
 }

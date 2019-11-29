@@ -8,6 +8,7 @@ import com.swipecrowd.dinogame.game.ui.GamePanel;
 import com.swipecrowd.dinogame.game.ui.Gui;
 import com.swipecrowd.dinogame.nn.Population;
 import com.swipecrowd.dinogame.utils.Random2;
+import com.swipecrowd.dinogame.utils.Tick;
 import lombok.Getter;
 
 import java.awt.Rectangle;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import static com.swipecrowd.dinogame.game.ui.GamePanel.CACTUS_Y_POS;
@@ -30,16 +32,14 @@ import static com.swipecrowd.dinogame.game.ui.Images.cactusSmallManyImage;
 
 public class Emulation {
     private static final int POP_SIZE = 1000;
-    private static double fps = 100;
-    private static final double SPAWN_PROBABILITY = 0.02;
+    private static double spawnProbability = 0.02;
     private static final double GRAVITY = 1;
     public static final double X_SPEED = 10;
     private static final double FORCE_UP = GRAVITY * 20;
     static ArrayList<Integer> obstacleHistory = new ArrayList<>();
     static ArrayList<Integer> randomAdditionHistory = new ArrayList<>();
     private static final double SPEEDUP = 1.0001;
-
-    private long lastDrawTime;
+    private int timeBetweenObstacles = 50;
 
     @Getter
     private CopyOnWriteArrayList<Obstacle> obstacles = new CopyOnWriteArrayList<>();
@@ -51,6 +51,8 @@ public class Emulation {
     private int emulationNo = 0;
     private int time;
     private int lastSpawnTime;
+    private AtomicLong lastDrawTime = new AtomicLong(0);
+    private double fps = 100;
 
     public void start() {
         final Gui gui = new Gui();
@@ -70,43 +72,22 @@ public class Emulation {
 
     private void resetEmulation() {
         obstacles.clear();
-        lastDrawTime = 0;
+        lastDrawTime.set(0);
         time = 0;
-        lastSpawnTime = 0;
+        lastSpawnTime = -timeBetweenObstacles;
     }
 
     private void runGeneration(final Gui gui) {
         int aliveDinos = population.getPop().size();
         while(aliveDinos > 0) {
-            waitTillNextFrame();
+            Tick.waitTillNextFrame(lastDrawTime, fps);
 
             updateState(gui.getPanel().getWidth());
 
             aliveDinos = countAliveDinos();
 
-            gui.redraw(time, aliveDinos);
+            gui.redraw(time, aliveDinos, spawnProbability, fps, timeBetweenObstacles);
         }
-    }
-
-    private void waitTillNextFrame() {
-        if (lastDrawTime == 0) {
-            lastDrawTime = System.currentTimeMillis();
-        } else {
-            // Wait a bit until we're allowed to draw the frame
-            final long currentTime = System.currentTimeMillis();
-            if(currentTime - lastDrawTime < getTimeInBetween()) {
-                try {
-                    Thread.sleep((long) (lastDrawTime + getTimeInBetween() - currentTime));
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            lastDrawTime += getTimeInBetween();
-        }
-    }
-
-    private double getTimeInBetween() {
-        return 1000 / fps;
     }
 
     private void updateState(final int frameWidth) {
@@ -123,7 +104,7 @@ public class Emulation {
 
         markDeadDinos();
         time++;
-        fps *= SPEEDUP;
+//        fps *= SPEEDUP;
     }
 
     private Obstacle createObstacle(final int xPos, final double random) {
@@ -224,7 +205,7 @@ public class Emulation {
 
     private boolean shouldAddObstacle() {
         final double rand = Random2.random();
-        return rand < SPAWN_PROBABILITY && time - lastSpawnTime > 50;
+        return rand < spawnProbability && time - lastSpawnTime > timeBetweenObstacles;
     }
 
     private void updateObstacles() {
@@ -282,5 +263,21 @@ public class Emulation {
         if(dino.isDucking()) {
             dino.setDucking(false);
         }
+    }
+
+    public void increaseSpawn() {
+        spawnProbability *= 1.1;
+    }
+
+    public void decreaseSpawn() {
+        spawnProbability /= 1.1;
+    }
+
+    public void decreaseTimeInBetweenObstacles() {
+        timeBetweenObstacles /= 1.1;
+    }
+
+    public void increaseTimeInBetweenObstacles() {
+        timeBetweenObstacles *= 1.1;
     }
 }

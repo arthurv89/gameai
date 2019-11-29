@@ -22,9 +22,9 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Genome {
-    private static final int inputs = 8;
+    static final int inputs = 13;
     private static final int outputs = 3;
-    private static int layers = 3;
+    private static int layers = 2;
     private static int biasNode = inputs;
 
     ArrayList<ConnectionGene> genes = new ArrayList<>();//a list of connections between nodes which represent the NN
@@ -111,9 +111,16 @@ public class Genome {
         }
     }
 
-    private double[] getVision(final Player dino, final Emulation emulation) {
-        final Optional<Obstacle> closestObstacle = emulation.getObstacles().stream()
-                .min((x, y) -> (int) (x.getXPos() - y.getXPos()));
+    public Optional<Obstacle> closest(final Stream<Obstacle> obstacleStream) {
+        return obstacleStream.min((x, y) -> (int) (x.getXPos() - y.getXPos()));
+    }
+
+    @VisibleForTesting
+    double[] getVision(final Player dino, final Emulation emulation) {
+        final Optional<Obstacle> closestObstacle = closest(emulation.getObstacles().stream());
+        final Optional<Obstacle> nextClosestObstacle = closestObstacle.flatMap(closest -> {
+            return closest(emulation.getObstacles().stream().filter(x -> x != closest));
+        });
         return new double[] {
             dino.getYPos(),
             dino.isJumping() ? 1 : 0,
@@ -122,7 +129,12 @@ public class Genome {
             closestObstacle.map(x -> x.getXPos()).orElse(0.0),
             closestObstacle.map(x -> x.getYPos()).orElse(0.0),
             closestObstacle.map(x -> x.getHeight()).orElse(0),
-            closestObstacle.map(x -> x.getWidth()).orElse(0)
+            closestObstacle.map(x -> x.getWidth()).orElse(0),
+            nextClosestObstacle.isPresent() ? 1 : 0,
+            nextClosestObstacle.map(x -> x.getXPos()).orElse(0.0),
+            nextClosestObstacle.map(x -> x.getYPos()).orElse(0.0),
+            nextClosestObstacle.map(x -> x.getHeight()).orElse(0),
+            nextClosestObstacle.map(x -> x.getWidth()).orElse(0)
         };
     }
 
